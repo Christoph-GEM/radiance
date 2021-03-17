@@ -69,7 +69,7 @@ public class UIUtil {
 
             // now get the configurations for each device
             for (GraphicsDevice device : devices) {
-                result = Math.max(result, getScaleFactor(device));
+                result = Math.max(result, getScaleFactorModern(device));
             }
 
             return result;
@@ -81,15 +81,41 @@ public class UIUtil {
         return DetectRetinaKit.getScaleFactor(graphics);
     }
 
-    private static Double cachedScaleFactorReply = null;
-
     public static double getScaleFactor() {
-        if (cachedScaleFactorReply != null) {
-            return cachedScaleFactorReply;
-        }
-
-        double result = GraphicsEnvironment.isHeadless() ? 1.0 : DetectRetinaKit.getScaleFactor();
-        cachedScaleFactorReply = Double.valueOf(result);
-        return cachedScaleFactorReply;
+    	
+    	Graphics2D graphics = getWindowGraphics();
+    	
+    	//prefer the window graphics scale factor towards the global one
+		double result = graphics != null ? getScaleFactor(graphics) : DetectRetinaKit.getScaleFactor();
+    	
+        return result;
     }
+
+	/**
+	 * Tries to get the Graphics2D of the currently active application window. 
+	 * Fallback: tries to get the Graphics2D of any application window.
+	 * 
+	 * @return the Graphics2D object, null if there is no application window
+	 */
+	private static Graphics2D getWindowGraphics() {
+		
+		Graphics2D graphics = null;
+    	Window activeWindow = javax.swing.FocusManager.getCurrentManager().getActiveWindow();
+    	
+    	if(activeWindow == null)
+    		activeWindow = Window.getWindows().length > 0 ?  Window.getWindows()[0] : null;
+    	
+    	boolean graphicsAvaiable = activeWindow != null && activeWindow.getGraphics() != null;
+    	
+		if(graphicsAvaiable)
+    		graphics = (Graphics2D) activeWindow.getGraphics();
+		
+		return graphics;
+	}
+    
+    public static Container rootContainer = null;
+    public static void setRootContainer(Container container) {
+    	rootContainer = container;
+    }
+    
 }
